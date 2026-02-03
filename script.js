@@ -39,7 +39,7 @@ window.adminLogin = function() {
         document.getElementById('adminPanel').style.display = 'block';
         document.getElementById('bottomNav').style.display = 'flex'; // إظهار الشريط السفلي
         
-        // تشغيل الموسيقى قسراً عند الضغط لضمان عملها
+        // محاولة تشغيل الموسيقى عند الضغط
         if (window.bgMusicPlayer && typeof window.bgMusicPlayer.playVideo === 'function') {
             window.bgMusicPlayer.setVolume(80);
             window.bgMusicPlayer.playVideo();
@@ -745,17 +745,17 @@ window.replyToSupport = async function(userId) {
 /* === إعدادات الموسيقى الخلفية === */
 window.bgMusicPlayer = null;
 
-// دالة تهيئة مشغل يوتيوب (يتم استدعاؤها تلقائياً بواسطة API)
+// تعريف دالة التحميل العامة قبل استدعاء السكربت
 window.onYouTubeIframeAPIReady = function() {
     window.bgMusicPlayer = new YT.Player('bg-music-player', {
         height: '0',
         width: '0',
-        videoId: 'RKGfh7gy6OY', // ID الفيديو المستخرج من الرابط
+        videoId: 'RKGfh7gy6OY', 
         playerVars: {
             'autoplay': 1,
             'controls': 0,
             'loop': 1,
-            'playlist': 'RKGfh7gy6OY', // ضروري للتكرار
+            'playlist': 'RKGfh7gy6OY',
             'playsinline': 1,
             'start': 45 // البدء من الثانية 45
         },
@@ -767,6 +767,17 @@ window.onYouTubeIframeAPIReady = function() {
 
 function onPlayerReady(event) {
     event.target.setVolume(80); // ضبط الصوت 80%
-    event.target.seekTo(45); // التأكد من القفز للثانية 45
+    event.target.seekTo(45); // تأكيد القفز للثانية 45
     event.target.playVideo();
 }
+
+// حقن سكربت اليوتيوب لضمان تحميله بعد الجافاسكريبت
+function injectYouTubeAPI() {
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+}
+
+// بدء تحميل API
+injectYouTubeAPI();
