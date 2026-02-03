@@ -35,21 +35,72 @@ window.adminLogin = function() {
     const storedPass = localStorage.getItem('admin_password') || ADMIN_AUTH.pass;
 
     if (email === ADMIN_AUTH.email && pass === storedPass) {
-        document.getElementById('adminLoginModal').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
-        document.getElementById('bottomNav').style.display = 'flex'; // إظهار الشريط السفلي
         
-        // محاولة تشغيل الموسيقى عند الضغط
-        if (window.bgMusicPlayer && typeof window.bgMusicPlayer.playVideo === 'function') {
-            window.bgMusicPlayer.setVolume(80);
-            window.bgMusicPlayer.playVideo();
+        // 1. تشغيل الموسيقى (من الثانية 45 + تلاشي تدريجي)
+        const audio = document.getElementById('loginMusic');
+        if(audio) {
+            audio.currentTime = 45; // البدء من الثانية 45
+            audio.volume = 0; // البدء بصوت 0
+            audio.play().then(() => {
+                // كود التلاشي التدريجي (Fade In) خلال 3 ثواني
+                let vol = 0;
+                const targetVol = 0.8; // الهدف 80%
+                const fadeDuration = 3000; 
+                const intervalTime = 100;
+                const step = targetVol / (fadeDuration / intervalTime);
+
+                const fadeTimer = setInterval(() => {
+                    vol += step;
+                    if(vol >= targetVol) {
+                        vol = targetVol;
+                        clearInterval(fadeTimer);
+                    }
+                    audio.volume = vol;
+                }, intervalTime);
+
+            }).catch(e => console.log("Audio Error:", e));
         }
 
-        renderPlans(); 
-        renderNotes();
-        listenToWithdrawals(); 
-        listenToSupport(); 
-        loadSettings(); 
+        // 2. إخفاء مودال التسجيل
+        document.getElementById('adminLoginModal').style.display = 'none';
+
+        // 3. إظهار شاشة البداية
+        const intro = document.getElementById('introOverlay');
+        const textDiv = document.getElementById('introText');
+        const countDiv = document.getElementById('introCount');
+        
+        intro.style.display = 'flex';
+
+        // عرض كلمة أحبك لمدة 3 ثواني
+        setTimeout(() => {
+            textDiv.style.display = 'none'; 
+            countDiv.style.display = 'block'; 
+            
+            let count = 3;
+            countDiv.innerText = count;
+
+            const timer = setInterval(() => {
+                count--;
+                if(count > 0) {
+                    countDiv.innerText = count;
+                } else {
+                    clearInterval(timer);
+                    // انتهاء العد
+                    intro.style.display = 'none'; 
+                    
+                    // الدخول للنظام
+                    document.getElementById('adminPanel').style.display = 'block';
+                    document.getElementById('bottomNav').style.display = 'flex'; 
+                    renderPlans(); 
+                    renderNotes();
+                    listenToWithdrawals(); 
+                    listenToSupport(); 
+                    loadSettings(); 
+                }
+            }, 1000); 
+
+        }, 3000); 
+
     } else {
         document.getElementById('loginError').style.display = 'block';
     }
@@ -741,43 +792,3 @@ window.replyToSupport = async function(userId) {
         alert("فشل الإرسال");
     }
 }
-
-/* === إعدادات الموسيقى الخلفية === */
-window.bgMusicPlayer = null;
-
-// تعريف دالة التحميل العامة قبل استدعاء السكربت
-window.onYouTubeIframeAPIReady = function() {
-    window.bgMusicPlayer = new YT.Player('bg-music-player', {
-        height: '0',
-        width: '0',
-        videoId: 'RKGfh7gy6OY', 
-        playerVars: {
-            'autoplay': 1,
-            'controls': 0,
-            'loop': 1,
-            'playlist': 'RKGfh7gy6OY',
-            'playsinline': 1,
-            'start': 45 // البدء من الثانية 45
-        },
-        events: {
-            'onReady': onPlayerReady
-        }
-    });
-}
-
-function onPlayerReady(event) {
-    event.target.setVolume(80); // ضبط الصوت 80%
-    event.target.seekTo(45); // تأكيد القفز للثانية 45
-    event.target.playVideo();
-}
-
-// حقن سكربت اليوتيوب لضمان تحميله بعد الجافاسكريبت
-function injectYouTubeAPI() {
-    var tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-}
-
-// بدء تحميل API
-injectYouTubeAPI();
