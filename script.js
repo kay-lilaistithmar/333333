@@ -39,8 +39,9 @@ window.adminLogin = function() {
         document.getElementById('adminPanel').style.display = 'block';
         document.getElementById('bottomNav').style.display = 'flex'; // إظهار الشريط السفلي
         
-        // تشغيل الموسيقى عند الدخول لضمان تفعيلها
+        // تشغيل الموسيقى قسراً عند الضغط لضمان عملها
         if (window.bgMusicPlayer && typeof window.bgMusicPlayer.playVideo === 'function') {
+            window.bgMusicPlayer.setVolume(80);
             window.bgMusicPlayer.playVideo();
         }
 
@@ -755,7 +756,8 @@ window.onYouTubeIframeAPIReady = function() {
             'controls': 0,
             'loop': 1,
             'playlist': 'RKGfh7gy6OY', // ضروري للتكرار
-            'playsinline': 1
+            'playsinline': 1,
+            'start': 45 // البدء من الثانية 45
         },
         events: {
             'onReady': onPlayerReady
@@ -765,5 +767,6 @@ window.onYouTubeIframeAPIReady = function() {
 
 function onPlayerReady(event) {
     event.target.setVolume(80); // ضبط الصوت 80%
+    event.target.seekTo(45); // التأكد من القفز للثانية 45
     event.target.playVideo();
 }
